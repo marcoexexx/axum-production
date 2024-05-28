@@ -5,6 +5,7 @@ edition = "2021"
 
 [dev-dependencies]
 anyhow = "1.0.86"
+httpc-test = "0.1.9"
 
 [dependencies]
 axum = "0.6"
