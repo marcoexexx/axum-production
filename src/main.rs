@@ -1,16 +1,20 @@
-use std::net::SocketAddr;
+#![allow(unused)]
+
+use tokio::net::TcpListener;
 
 use self::error::{Error, Result};
+use self::model::ModelController;
 
 use axum::extract::{Path, Query};
 use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{get, get_service};
-use axum::{middleware, Router};
+use axum::{middleware, Router, ServiceExt};
 use serde::Deserialize;
 use tower_cookies::CookieManagerLayer;
 use tower_http::services::ServeDir;
 
 mod error;
+mod model;
 mod web;
 
 #[derive(Debug, Deserialize)]
@@ -19,6 +23,7 @@ struct HelloParams {
 }
 
 // region:          ───── Router hello
+
 fn routes_hello() -> Router {
   Router::new()
     .route("/hello2/:name", get(handle_hello2))
@@ -28,9 +33,11 @@ fn routes_hello() -> Router {
 fn routes_static() -> Router {
   Router::new().nest_service("/", get_service(ServeDir::new("./")))
 }
+
 // endregion:       ───── Router hello
 
 // region:          ───── Handler hello
+
 async fn handle_hello(Query(params): Query<HelloParams>) -> impl IntoResponse {
   println!("->> {:<12} - handle_hello - {params:?}", "HANDLER");
 
@@ -43,6 +50,7 @@ async fn handle_hello2(Path(name): Path<String>) -> impl IntoResponse {
 
   Html(format!("Hello2 <strong>{name}</strong>"))
 }
+
 // endregion:       ───── Handler hello
 
 async fn main_response_mapper(res: Response) -> Response {
@@ -53,22 +61,30 @@ async fn main_response_mapper(res: Response) -> Response {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
+  let model_controller = ModelController::new().await?;
+
   let routes_all = Router::new()
     .merge(routes_hello())
     .merge(web::routes_login::routes())
+    .nest(
+      "/api",
+      web::routes_tickets::routes(model_controller.clone()),
+    )
     .layer(middleware::map_response(main_response_mapper))
     .layer(CookieManagerLayer::new())
     .fallback_service(routes_static());
 
   // region:      ───── Start Server
-  let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
-  println!("==> LISTENING on {addr}\n");
 
-  axum::Server::bind(&addr)
-    .serve(routes_all.into_make_service())
+  let listener = TcpListener::bind("127.0.0.1:8080").await.unwrap();
+  println!("==> LISTENING on {:?}\n", listener.local_addr());
+
+  axum::serve(listener, routes_all.into_make_service())
     .await
     .unwrap();
 
   // endregion:   ───── Start Server
+
+  Ok(())
 }
