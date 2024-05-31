@@ -8,7 +8,7 @@ use self::model::ModelController;
 use axum::extract::{Path, Query};
 use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{get, get_service};
-use axum::{middleware, Router, ServiceExt};
+use axum::{middleware, Router};
 use serde::Deserialize;
 use tower_cookies::CookieManagerLayer;
 use tower_http::services::ServeDir;
@@ -64,20 +64,20 @@ async fn main_response_mapper(res: Response) -> Response {
 async fn main() -> Result<()> {
   let model_controller = ModelController::new().await?;
 
+  let api_routes = web::routes_tickets::routes(model_controller.clone())
+    .route_layer(middleware::from_fn(web::mw_auth::mw_require_auth));
+
   let routes_all = Router::new()
     .merge(routes_hello())
     .merge(web::routes_login::routes())
-    .nest(
-      "/api",
-      web::routes_tickets::routes(model_controller.clone()),
-    )
+    .nest("/api", api_routes)
     .layer(middleware::map_response(main_response_mapper))
     .layer(CookieManagerLayer::new())
     .fallback_service(routes_static());
 
   // region:      ───── Start Server
 
-  let listener = TcpListener::bind("127.0.0.1:8080").await.unwrap();
+  let listener = TcpListener::bind("127.0.0.1:8000").await.unwrap();
   println!("==> LISTENING on {:?}\n", listener.local_addr());
 
   axum::serve(listener, routes_all.into_make_service())
