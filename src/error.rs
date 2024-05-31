@@ -6,6 +6,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Debug)]
 pub enum Error {
   LoginFail(String),
+  AuthFail(String),
   ResourceNotFound { id: u64 },
   InternalServerError,
 }
@@ -27,8 +28,12 @@ impl IntoResponse for Error {
     println!("->> {:<12} ───── {self}", "INTO_RESPONSE");
 
     match self {
-      Self::LoginFail(msg) => (
-        StatusCode::UNAUTHORIZED,
+      Self::LoginFail(msg) => {
+        (StatusCode::UNAUTHORIZED, format!("Failed login with {msg}")).into_response()
+      }
+
+      Self::AuthFail(msg) => (
+        StatusCode::FORBIDDEN,
         format!("Failed authentication with {msg}"),
       )
         .into_response(),

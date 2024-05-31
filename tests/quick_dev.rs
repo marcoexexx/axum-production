@@ -16,6 +16,11 @@ async fn quick_dev() -> Result<()> {
   );
   req_post_body.await?.print().await?;
 
+  hc.do_post("/api/tickets", json!({ "title": format!("Ticket ##") }))
+    .await?
+    .print()
+    .await?;
+
   hc.do_get("/api/tickets").await?.print().await?;
 
   Ok(())
