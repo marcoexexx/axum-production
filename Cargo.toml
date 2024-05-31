@@ -8,6 +8,7 @@ anyhow = "1.0.86"
 httpc-test = "0.1.9"
 
 [dependencies]
+async-trait = "0.1.80"
 axum = { version = "0.7", features = ["macros"] }
 lazy-regex = "3.1.0"
 serde = { version = "1.0.203", features = ["derive"] }
