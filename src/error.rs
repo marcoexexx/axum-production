@@ -3,11 +3,16 @@ use axum::response::{IntoResponse, Response};
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Error {
   LoginFail(String),
-  AuthFail(String),
+
+  AuthFailNoAuthTokenCookie,
+  AuthFailTokenWrongFormat,
+  AuthFailCtxNotInRequestExt,
+
   ResourceNotFound { id: u64 },
+
   InternalServerError,
 }
 
@@ -32,9 +37,21 @@ impl IntoResponse for Error {
         (StatusCode::UNAUTHORIZED, format!("Failed login with {msg}")).into_response()
       }
 
-      Self::AuthFail(msg) => (
-        StatusCode::FORBIDDEN,
-        format!("Failed authentication with {msg}"),
+      Self::AuthFailNoAuthTokenCookie => (
+        StatusCode::UNAUTHORIZED,
+        format!("Authentication token is missing."),
+      )
+        .into_response(),
+
+      Self::AuthFailTokenWrongFormat => (
+        StatusCode::UNAUTHORIZED,
+        format!("Authentication token is invalid."),
+      )
+        .into_response(),
+
+      Self::AuthFailCtxNotInRequestExt => (
+        StatusCode::UNAUTHORIZED,
+        format!("Authentication context is invalid."),
       )
         .into_response(),
 

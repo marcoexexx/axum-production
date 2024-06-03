@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use tokio::net::TcpListener;
 
 use self::error::{Error, Result};
@@ -73,6 +71,10 @@ async fn main() -> Result<()> {
     .merge(web::routes_login::routes())
     .nest("/api", api_routes)
     .layer(middleware::map_response(main_response_mapper))
+    .layer(middleware::from_fn_with_state(
+      model_controller.clone(),
+      web::mw_auth::mw_ctx_reolver,
+    ))
     .layer(CookieManagerLayer::new())
     .fallback_service(routes_static());
 
