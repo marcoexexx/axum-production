@@ -1,3 +1,18 @@
+//! NEED TO NOTE
+//!
+//! # Login route
+//! - set token in cookie
+//!
+//! # MIDDLEWARE :: mw_require_auth
+//! - check token in cookie
+//!
+//! # Producted route
+//! - Run mw_require_auth
+//!
+//! # Get logged token, inside Producted route
+//! - Run mw_require_auth
+//! - get token from request extensions
+
 use axum::async_trait;
 use axum::body::Body;
 use axum::extract::{FromRequestParts, State};
