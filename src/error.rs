@@ -3,17 +3,15 @@ use axum::response::{IntoResponse, Response};
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, strum_macros::AsRefStr)]
 pub enum Error {
-  LoginFail(String),
+  LoginFail,
 
   AuthFailNoAuthTokenCookie,
   AuthFailTokenWrongFormat,
   AuthFailCtxNotInRequestExt,
 
   ResourceNotFound { id: u64 },
-
-  InternalServerError,
 }
 
 // region:          ───── Error boilerplate
@@ -32,40 +30,39 @@ impl IntoResponse for Error {
   fn into_response(self) -> Response {
     println!("->> {:<12} ───── {self}", "INTO_RESPONSE");
 
+    let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
+
+    // Insert the error into the response
+    response.extensions_mut().insert(self);
+
+    response
+  }
+}
+
+impl Error {
+  pub fn client_status_and_error(&self) -> (StatusCode, ClientError) {
+    #[allow(unreachable_patterns)]
     match self {
-      Self::LoginFail(msg) => {
-        (StatusCode::UNAUTHORIZED, format!("Failed login with {msg}")).into_response()
-      }
+      Self::LoginFail => (StatusCode::FORBIDDEN, ClientError::LoginFail),
 
-      Self::AuthFailNoAuthTokenCookie => (
-        StatusCode::UNAUTHORIZED,
-        format!("Authentication token is missing."),
-      )
-        .into_response(),
+      // -- Auth
+      Self::AuthFailTokenWrongFormat
+      | Self::AuthFailNoAuthTokenCookie
+      | Self::AuthFailCtxNotInRequestExt => (StatusCode::FORBIDDEN, ClientError::NoAuth),
 
-      Self::AuthFailTokenWrongFormat => (
-        StatusCode::UNAUTHORIZED,
-        format!("Authentication token is invalid."),
-      )
-        .into_response(),
+      // -- Model
+      Self::ResourceNotFound { .. } => (StatusCode::BAD_REQUEST, ClientError::InvalidParams),
 
-      Self::AuthFailCtxNotInRequestExt => (
-        StatusCode::UNAUTHORIZED,
-        format!("Authentication context is invalid."),
-      )
-        .into_response(),
-
-      Self::ResourceNotFound { id } => (
-        StatusCode::NOT_FOUND,
-        format!("Not found resource id with `{id}`"),
-      )
-        .into_response(),
-
-      Self::InternalServerError => (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        "Unhandled internal server error",
-      )
-        .into_response(),
+      // -- Fallback
+      _ => (StatusCode::INTERNAL_SERVER_ERROR, ClientError::ServiceError),
     }
   }
+}
+
+#[derive(Debug, strum_macros::AsRefStr)]
+pub enum ClientError {
+  LoginFail,
+  NoAuth,
+  InvalidParams,
+  ServiceError,
 }

@@ -20,9 +20,7 @@ async fn api_login(cookies: Cookies, payload: Json<LoginPayload>) -> Result<Json
 
   // TODO: Implement real db/auth logic.
   if payload.username != "demo" || payload.password != "demo" {
-    return Err(Error::LoginFail(String::from(
-      "incorrect username or password",
-    )));
+    return Err(Error::LoginFail);
   }
 
   // FIXME: Implement real auth-token generation/signature.
