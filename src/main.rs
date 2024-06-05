@@ -1,6 +1,10 @@
+use axum::http::{Method, Uri};
+use ctx::Ctx;
 use serde_json::json;
 use tokio::net::TcpListener;
 use uuid::Uuid;
+
+use crate::log::log_request;
 
 use self::error::{Error, Result};
 use self::model::ModelController;
@@ -15,6 +19,7 @@ use tower_http::services::ServeDir;
 
 mod ctx;
 mod error;
+mod log;
 mod model;
 mod web;
 
@@ -54,7 +59,12 @@ async fn handle_hello2(Path(name): Path<String>) -> impl IntoResponse {
 
 // endregion:       ───── Handler hello
 
-async fn main_response_mapper(res: Response) -> Response {
+async fn main_response_mapper(
+  ctx: Option<Ctx>,
+  uri: Uri,
+  req_method: Method,
+  res: Response,
+) -> Response {
   println!("->> {:12} - main_response_mapper", "RES_MAPPER");
   let uuid = Uuid::new_v4();
 
@@ -79,7 +89,8 @@ async fn main_response_mapper(res: Response) -> Response {
       (*status_code, Json(client_error_body)).into_response()
     });
 
-  println!("->> server log line - {uuid} - Error: {service_error:?}");
+  let client_error = client_status_error.unzip().1;
+  let _ = log_request(uuid, req_method, uri, ctx, service_error, client_error).await;
 
   println!();
 
