@@ -1,10 +1,13 @@
 // region:          ───── RESR Handler
 
 use axum::extract::Path;
+use axum::extract::Query;
 use axum::extract::State;
+use axum::routing::get;
 use axum::routing::{delete, post};
 use axum::Json;
 use axum::Router;
+use serde::Deserialize;
 
 use crate::ctx::Ctx;
 use crate::model::{ModelController, Ticket, TicketInput};
@@ -14,7 +17,20 @@ pub fn routes(model_controller: ModelController) -> Router {
   Router::new()
     .route("/tickets", post(create_ticket).get(find_many_ticket))
     .route("/tickets/:id", delete(delete_ticket))
+    .route("/tickets/detail", get(detail_ticket))
     .with_state(model_controller)
+}
+
+#[derive(Debug, Deserialize)]
+struct QueryParam {
+  #[allow(unused)]
+  id: String,
+}
+
+async fn detail_ticket(Query(q): Query<QueryParam>) -> Result<String> {
+  println!("->> {:<12} - detail_ticket -- {q:?}", "HANDLER");
+
+  Ok(String::from("Detail ticket"))
 }
 
 async fn create_ticket(

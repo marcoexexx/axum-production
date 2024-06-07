@@ -23,5 +23,7 @@ async fn quick_dev() -> Result<()> {
 
   hc.do_get("/api/tickets").await?.print().await?;
 
+  hc.do_get("/api/tickets/detail").await?.print().await?;
+
   Ok(())
 }
