@@ -16,6 +16,7 @@ async fn main() -> Result<()> {
   let mm = ModelManager::new().await?;
 
   let routes = Router::new()
+    .merge(web::routes_login::routes())
     .layer(middleware::map_response(
       web::mw_response_map::mw_response_map,
     ))
