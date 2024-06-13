@@ -4,6 +4,7 @@ use tokio::net::TcpListener;
 
 use error::Result;
 use tower_cookies::CookieManagerLayer;
+use tracing_subscriber::EnvFilter;
 
 mod ctx;
 mod error;
@@ -13,6 +14,12 @@ mod web;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+  tracing_subscriber::fmt()
+    .without_time()
+    .with_target(false)
+    .with_env_filter(EnvFilter::from_default_env())
+    .init();
+
   let mm = ModelManager::new().await?;
 
   let routes = Router::new()
