@@ -1,12 +1,12 @@
 use std::fmt::Display;
 
-use crate::model;
+use serde::Serialize;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub enum Error {
-  Model(model::Error),
+  CtxCannotNewRootCtx,
 }
 
 impl Display for Error {
@@ -16,9 +16,3 @@ impl Display for Error {
 }
 
 impl std::error::Error for Error {}
-
-impl From<model::Error> for Error {
-  fn from(value: model::Error) -> Self {
-    Self::Model(value)
-  }
-}

@@ -1,13 +1,11 @@
 use std::fmt::Display;
 
-use crate::model;
+use serde::Serialize;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug)]
-pub enum Error {
-  Model(model::Error),
-}
+#[derive(Debug, Serialize)]
+pub enum Error {}
 
 impl Display for Error {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -16,9 +14,3 @@ impl Display for Error {
 }
 
 impl std::error::Error for Error {}
-
-impl From<model::Error> for Error {
-  fn from(value: model::Error) -> Self {
-    Self::Model(value)
-  }
-}

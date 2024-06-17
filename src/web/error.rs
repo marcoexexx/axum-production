@@ -1,3 +1,5 @@
+use crate::web;
+
 use std::fmt::Display;
 
 use axum::http::StatusCode;
@@ -7,10 +9,13 @@ use serde::Serialize;
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, Clone, Serialize, strum_macros::AsRefStr)]
+#[serde(tag = "type", content = "data")]
 pub enum Error {
   // -- Login
   LoginFail,
+
   // -- CtxExtError
+  CtxExt(web::mw_auth::CtxExtError),
 }
 
 impl Display for Error {
@@ -36,6 +41,8 @@ impl Error {
   pub fn client_status_and_error(&self) -> (StatusCode, ClientError) {
     match self {
       // -- Login/Auth
+      Self::CtxExt(_) => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
+
       // -- Fallback
       _ => (
         StatusCode::INTERNAL_SERVER_ERROR,
