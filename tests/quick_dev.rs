@@ -3,7 +3,7 @@ use serde_json::json;
 
 #[tokio::test]
 async fn quick_dev() -> Result<()> {
-  let hc = httpc_test::new_client("http://localhost:8080")?;
+  let hc = httpc_test::new_client("http://localhost:8000")?;
 
   hc.do_get("/index.html").await?.print().await?;
 
