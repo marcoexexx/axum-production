@@ -1,7 +1,8 @@
 #![allow(unused)] // For early local development
 
+pub use self::config::config;
+pub use self::error::{Error, Result};
 use self::model::ModelManager;
-pub use error::Result;
 
 use axum::{middleware, Router};
 use tokio::{net::TcpListener, signal};
@@ -9,6 +10,7 @@ use tower_cookies::CookieManagerLayer;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
+mod config;
 mod ctx;
 mod error;
 mod log;
