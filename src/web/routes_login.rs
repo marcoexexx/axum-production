@@ -6,6 +6,7 @@ use serde::Deserialize;
 use serde_json::json;
 use serde_json::Value;
 use tower_cookies::{Cookie, Cookies};
+use tracing::debug;
 
 #[derive(Debug, Deserialize)]
 struct LoginPayload {
@@ -18,7 +19,7 @@ pub fn routes() -> Router {
 }
 
 async fn api_login_handler(cookies: Cookies, payload: Json<LoginPayload>) -> Result<Json<Value>> {
-  println!("->> {:<12} - api_login_handler", "HANDLER");
+  debug!("{:<12} - api_login_handler", "HANDLER");
 
   // TODO: Implement real db/auth logic
   if payload.username != "demo1" || payload.pwd != "welcome" {

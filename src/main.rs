@@ -1,9 +1,13 @@
+#![allow(unused)] // For early local development
+
 use self::model::ModelManager;
 pub use error::Result;
 
 use axum::{middleware, Router};
 use tokio::{net::TcpListener, signal};
 use tower_cookies::CookieManagerLayer;
+use tracing::info;
+use tracing_subscriber::EnvFilter;
 
 mod ctx;
 mod error;
@@ -17,6 +21,12 @@ async fn shutdown_signal() {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+  tracing_subscriber::fmt()
+    .without_time() // For early local development
+    .with_target(false)
+    .with_env_filter(EnvFilter::from_default_env())
+    .init();
+
   let mm = ModelManager::new().await?;
 
   let routes = Router::new()
@@ -30,7 +40,7 @@ async fn main() -> Result<()> {
     .fallback_service(web::routes_static::serve_dir());
 
   let tcp_listener = TcpListener::bind("localhost:8000").await.unwrap();
-  println!("🚀 Server is ready http://localhost:8000");
+  info!("🚀 Server is ready http://localhost:8000");
 
   axum::serve(tcp_listener, routes.into_make_service())
     .with_graceful_shutdown(shutdown_signal())

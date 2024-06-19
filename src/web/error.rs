@@ -5,6 +5,7 @@ use std::fmt::Display;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use serde::Serialize;
+use tracing::debug;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -28,7 +29,7 @@ impl std::error::Error for Error {}
 
 impl IntoResponse for Error {
   fn into_response(self) -> axum::response::Response {
-    println!("->> {:<12} - model::Error {self:?}", "INTO_RES");
+    debug!("{:<12} - model::Error {self:?}", "INTO_RES");
 
     let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
 
