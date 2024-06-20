@@ -5,6 +5,7 @@ use std::sync::OnceLock;
 
 pub fn config() -> &'static Config {
   static INSTANCE: OnceLock<Config> = OnceLock::new();
+
   INSTANCE.get_or_init(|| {
     Config::load_from_env()
       .unwrap_or_else(|ex| panic!("FATAL - WHILE LOADING CONF - Cause: {ex:?}"))

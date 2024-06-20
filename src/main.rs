@@ -4,6 +4,8 @@ pub use self::config::config;
 pub use self::error::{Error, Result};
 use self::model::ModelManager;
 
+pub mod _dev_utils; // Commented during early development.
+
 use axum::{middleware, Router};
 use tokio::{net::TcpListener, signal};
 use tower_cookies::CookieManagerLayer;
@@ -28,6 +30,9 @@ async fn main() -> Result<()> {
     .with_target(false)
     .with_env_filter(EnvFilter::from_default_env())
     .init();
+
+  // -- FOR DEV ONLY
+  _dev_utils::init_dev().await;
 
   let mm = ModelManager::new().await?;
 
