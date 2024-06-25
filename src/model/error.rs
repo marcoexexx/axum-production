@@ -10,6 +10,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[serde_as]
 #[derive(Debug, Serialize)]
 pub enum Error {
+  EntityNotFound { entity: &'static str, id: i64 },
+
   // -- Modules
   Store(store::Error),
 
