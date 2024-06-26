@@ -11,6 +11,7 @@ pub enum Error {
 
   // -- Config
   ConfigMissingEnv(&'static str),
+  ConfigWrongFormat(&'static str),
 }
 
 impl Display for Error {

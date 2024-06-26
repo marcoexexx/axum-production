@@ -1,6 +1,7 @@
-use crate::web;
+use crate::{model, web};
 
 use std::fmt::Display;
+use std::sync::Arc;
 
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -9,14 +10,19 @@ use tracing::debug;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug, Clone, Serialize, strum_macros::AsRefStr)]
+#[derive(Debug, Serialize, strum_macros::AsRefStr)]
 #[serde(tag = "type", content = "data")]
 pub enum Error {
   // -- Login
-  LoginFail,
+  LoginFailUsernameNotFound,
+  LoginFailUserHasNoPwd { user_id: i64 },
+  LoginFailPwdNotMatching { user_id: i64 },
 
   // -- CtxExtError
   CtxExt(web::mw_auth::CtxExtError),
+
+  // -- modules
+  Model(model::Error),
 }
 
 impl Display for Error {
@@ -27,13 +33,19 @@ impl Display for Error {
 
 impl std::error::Error for Error {}
 
+impl From<model::Error> for Error {
+  fn from(value: model::Error) -> Self {
+    Self::Model(value)
+  }
+}
+
 impl IntoResponse for Error {
   fn into_response(self) -> axum::response::Response {
     debug!("{:<12} - model::Error {self:?}", "INTO_RES");
 
     let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
 
-    response.extensions_mut().insert(self);
+    response.extensions_mut().insert(Arc::new(self));
     response
   }
 }
@@ -41,7 +53,12 @@ impl IntoResponse for Error {
 impl Error {
   pub fn client_status_and_error(&self) -> (StatusCode, ClientError) {
     match self {
-      // -- Login/Auth
+      // -- Login
+      Self::LoginFailUsernameNotFound
+      | Self::LoginFailUserHasNoPwd { .. }
+      | Self::LoginFailPwdNotMatching { .. } => (StatusCode::FORBIDDEN, ClientError::LOGIN_FAIL),
+
+      // --Auth
       Self::CtxExt(_) => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
 
       // -- Fallback

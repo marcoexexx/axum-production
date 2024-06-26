@@ -1,11 +1,11 @@
 use anyhow::Result;
 use serde_json::json;
 
-#[tokio::test]
-async fn quick_dev() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
   let hc = httpc_test::new_client("http://localhost:8000")?;
 
-  hc.do_get("/index.html").await?.print().await?;
+  // hc.do_get("/index.html").await?.print().await?;
 
   let req_login = hc.do_post(
     "/api/login",

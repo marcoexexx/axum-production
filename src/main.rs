@@ -13,6 +13,7 @@ use tracing::info;
 use tracing_subscriber::EnvFilter;
 
 mod config;
+mod crypt;
 mod ctx;
 mod error;
 mod log;
@@ -37,7 +38,7 @@ async fn main() -> Result<()> {
   let mm = ModelManager::new().await?;
 
   let routes = Router::new()
-    .merge(web::routes_login::routes())
+    .merge(web::routes_login::routes(mm.clone()))
     .layer(middleware::map_response(web::mw_res_map::mw_response_map))
     .layer(middleware::from_fn_with_state(
       mm.clone(),
