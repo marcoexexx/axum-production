@@ -6,8 +6,6 @@ use self::model::ModelManager;
 
 pub mod _dev_utils; // Commented during early development.
 
-use axum::response::Html;
-use axum::routing::get;
 use axum::{middleware, Router};
 use tokio::{net::TcpListener, signal};
 use tower_cookies::CookieManagerLayer;
@@ -40,13 +38,12 @@ async fn main() -> Result<()> {
 
   let mm = ModelManager::new().await?;
 
-  let routes_hello = Router::new()
-    .route("/hello", get(|| async { Html("Hello World") }))
-    .route_layer(middleware::from_fn(web::mw_auth::mw_ctx_require));
+  let routes_rpc =
+    web::rpc::routes(mm.clone()).route_layer(middleware::from_fn(web::mw_auth::mw_ctx_require));
 
   let routes = Router::new()
     .merge(web::routes_login::routes(mm.clone()))
-    .merge(routes_hello)
+    .nest("/api", routes_rpc)
     .layer(middleware::map_response(web::mw_res_map::mw_response_map))
     .layer(middleware::from_fn_with_state(
       mm.clone(),
