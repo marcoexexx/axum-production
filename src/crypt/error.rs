@@ -4,8 +4,19 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, Serialize)]
 pub enum Error {
+  // -- Key
   KeyFailHmac,
+
+  // -- Pwd
   PwdNotMatching,
+
+  // -- Token
+  TokenInvalidFormat,
+  TokenExpNotIso,
+  TokenCannotDecodeIdent,
+  TokenCannotDecodeExp,
+  TokenSignatureNotMatching,
+  TokenExpired,
 }
 
 impl std::fmt::Display for Error {

@@ -1,4 +1,4 @@
-use crate::{model, web};
+use crate::{crypt, model, web};
 
 use std::fmt::Display;
 use std::sync::Arc;
@@ -23,6 +23,7 @@ pub enum Error {
 
   // -- modules
   Model(model::Error),
+  Crypt(crypt::Error),
 }
 
 impl Display for Error {
@@ -36,6 +37,12 @@ impl std::error::Error for Error {}
 impl From<model::Error> for Error {
   fn from(value: model::Error) -> Self {
     Self::Model(value)
+  }
+}
+
+impl From<crypt::Error> for Error {
+  fn from(value: crypt::Error) -> Self {
+    Self::Crypt(value)
   }
 }
 

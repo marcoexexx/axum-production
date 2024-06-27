@@ -2,6 +2,7 @@ pub use self::error::{Error, Result};
 
 mod error;
 pub mod pwd;
+pub mod token;
 
 use hmac::{Hmac, Mac};
 use sha2::Sha512;

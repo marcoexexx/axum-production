@@ -2,7 +2,7 @@ use crate::crypt::{pwd, EncryptContent};
 use crate::ctx::Ctx;
 use crate::model::user::{LoginUserInput, UserBmc};
 use crate::model::ModelManager;
-use crate::web::{Error, Result, AUTH_TOKEN};
+use crate::web::{self, remove_token_cookie, Error, Result, AUTH_TOKEN};
 
 use axum::extract::State;
 use axum::routing::post;
@@ -22,6 +22,7 @@ struct LoginPayload {
 pub fn routes(mm: ModelManager) -> Router {
   Router::new()
     .route("/api/login", post(api_login_handler))
+    .route("/api/logout", post(api_logout_handler))
     .with_state(mm)
 }
 
@@ -59,14 +60,37 @@ async fn api_login_handler(
   )
   .map_err(|_| Error::LoginFailPwdNotMatching { user_id })?;
 
-  // FIXME: Implement real auth-token generation/signature.
-  cookies.add(Cookie::new(AUTH_TOKEN, "user-1.exp.sign"));
+  // -- Set web token.
+  web::set_token_cookie(&cookies, &user.username, &user.token_salt.to_string())?;
 
   // Create the success body.
   let body = Json(json!({
     "result": {
       "success": true
     }
+  }));
+
+  Ok(body)
+}
+
+#[derive(Debug, Deserialize)]
+struct LogoutPayload {
+  logout: bool,
+}
+
+async fn api_logout_handler(
+  cookies: Cookies,
+  Json(payload): Json<LogoutPayload>,
+) -> Result<Json<Value>> {
+  debug!("{:<12} - api_logout_handler", "HANDLER");
+  let should_logout = payload.logout;
+
+  if should_logout {
+    remove_token_cookie(&cookies)?;
+  }
+
+  let body = Json(json!({
+    "result": { "logged out": payload.logout }
   }));
 
   Ok(body)
