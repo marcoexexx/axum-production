@@ -3,13 +3,17 @@ use crate::model::ModelManager;
 use crate::model::{Error, Result};
 
 use modql::field::HasFields;
+use modql::filter::{FilterGroups, ListOptions};
 use modql::SIden;
 use sea_query::{
-  ConditionalStatement, Expr, Iden, IntoIden, PostgresQueryBuilder, Query, TableRef
+  Condition, ConditionalStatement, Expr, Iden, IntoIden, PostgresQueryBuilder, Query, TableRef
 };
 use sea_query_binder::SqlxBinder;
 use sqlx::postgres::PgRow;
 use sqlx::FromRow;
+
+const LIST_LIMIT_DEFAULT: i64 = 10;
+const LIST_LIMIT_MAX: i64 = 1000;
 
 #[derive(Iden)]
 pub enum ColumnIden {
@@ -21,6 +25,34 @@ pub trait DbBmc {
 
   fn table_ref() -> TableRef {
     TableRef::Table(SIden(Self::TABLE).into_iden())
+  }
+}
+
+pub fn finalize_list_options(list_options: Option<ListOptions>) -> Result<ListOptions> {
+  // When Some, validate limit
+  if let Some(mut list_options) = list_options {
+    // Validate the limit.
+    if let Some(limit) = list_options.limit {
+      if limit > LIST_LIMIT_MAX {
+        return Err(Error::ListLimitOverMax {
+          max: LIST_LIMIT_MAX,
+          actual: limit,
+        });
+      }
+    }
+    // Set the default limit if no limit
+    else {
+      list_options.limit = Some(LIST_LIMIT_DEFAULT);
+    }
+    Ok(list_options)
+  }
+  // When None, return default
+  else {
+    Ok(ListOptions {
+      limit: Some(LIST_LIMIT_DEFAULT),
+      offset: None,
+      order_bys: Some("id".into()),
+    })
   }
 }
 
@@ -77,23 +109,18 @@ where
       id,
     })?;
 
-  // let task: E = sqlb::select()
-  //   .table(MC::TABLE)
-  //   .columns(E::field_names())
-  //   .and_where("id", "=", id)
-  //   .fetch_optional(db)
-  //   .await?
-  //   .ok_or(Error::EntityNotFound {
-  //     entity: MC::TABLE,
-  //     id,
-  //   })?;
-
   Ok(task)
 }
 
-pub async fn list<MC, E>(_ctx: &Ctx, mm: &ModelManager) -> Result<Vec<E>>
+pub async fn list<MC, E, F>(
+  _ctx: &Ctx,
+  mm: &ModelManager,
+  filters: Option<F>,
+  list_options: Option<ListOptions>,
+) -> Result<Vec<E>>
 where
   MC: DbBmc,
+  F: Into<FilterGroups>,
   E: for<'r> FromRow<'r, PgRow> + Unpin + Send,
   E: HasFields,
 {
@@ -102,6 +129,17 @@ where
   // -- Build query
   let mut query = Query::select();
   query.from(MC::table_ref()).columns(E::field_column_refs());
+
+  // condition from filter
+  if let Some(filter) = filters {
+    let filters: FilterGroups = filter.into();
+    let cond: Condition = filters.try_into()?;
+    query.cond_where(cond);
+  }
+
+  // list options
+  let list_options = finalize_list_options(list_options)?;
+  list_options.apply_to_sea_query(&mut query);
 
   // -- Exec query
   let (sql, values) = query.build_sqlx(PostgresQueryBuilder);

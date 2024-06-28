@@ -19,20 +19,20 @@ async fn main() -> Result<()> {
     json!({ "username": "demo1", "pwd": "welcome" })
   );
 
-  // print!(
-  //   hc,
-  //   "/api/rpc",
-  //   json!({
-  //     "id": 1,
-  //     "method":
-  //     "create_task",
-  //     "params": {
-  //       "data": {
-  //         "title": "task AAA"
-  //       }
-  //     }
-  //   })
-  // );
+  print!(
+    hc,
+    "/api/rpc",
+    json!({
+      "id": 1,
+      "method":
+      "create_task",
+      "params": {
+        "data": {
+          "title": "task AAA"
+        }
+      }
+    })
+  );
 
   // print!(
   //   hc,

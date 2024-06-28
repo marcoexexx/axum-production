@@ -14,6 +14,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
   EntityNotFound { entity: &'static str, id: i64 },
 
+  ListLimitOverMax { max: i64, actual: i64 },
+
   // -- Modules
   Crypt(crypt::Error),
   Store(store::Error),
@@ -22,6 +24,8 @@ pub enum Error {
   Sqlx(#[serde_as(as = "DisplayFromStr")] sqlx::Error),
 
   SeaQuery(#[serde_as(as = "DisplayFromStr")] sea_query::error::Error),
+
+  ModqlIntoSea(#[serde_as(as = "DisplayFromStr")] modql::filter::IntoSeaError),
 }
 
 impl From<store::Error> for Error {
@@ -45,6 +49,12 @@ impl From<sqlx::Error> for Error {
 impl From<sea_query::error::Error> for Error {
   fn from(value: sea_query::error::Error) -> Self {
     Self::SeaQuery(value)
+  }
+}
+
+impl From<modql::filter::IntoSeaError> for Error {
+  fn from(value: modql::filter::IntoSeaError) -> Self {
+    Self::ModqlIntoSea(value)
   }
 }
 
