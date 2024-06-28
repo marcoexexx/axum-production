@@ -19,48 +19,48 @@ async fn main() -> Result<()> {
     json!({ "username": "demo1", "pwd": "welcome" })
   );
 
-  print!(
-    hc,
-    "/api/rpc",
-    json!({
-      "id": 1,
-      "method":
-      "create_task",
-      "params": {
-        "data": {
-          "title": "task AAA"
-        }
-      }
-    })
-  );
+  // print!(
+  //   hc,
+  //   "/api/rpc",
+  //   json!({
+  //     "id": 1,
+  //     "method":
+  //     "create_task",
+  //     "params": {
+  //       "data": {
+  //         "title": "task AAA"
+  //       }
+  //     }
+  //   })
+  // );
 
-  print!(
-    hc,
-    "/api/rpc",
-    json!({
-      "id": 1,
-      "method":
-      "update_task",
-      "params": {
-        "id": 1000,
-        "data": {
-          "title": "task BBB"
-        }
-      }
-    })
-  );
+  // print!(
+  //   hc,
+  //   "/api/rpc",
+  //   json!({
+  //     "id": 1,
+  //     "method":
+  //     "update_task",
+  //     "params": {
+  //       "id": 1000,
+  //       "data": {
+  //         "title": "task BBB"
+  //       }
+  //     }
+  //   })
+  // );
 
-  print!(
-    hc,
-    "/api/rpc",
-    json!({
-      "id": 1,
-      "method": "delete_task",
-      "params": {
-        "id": 1000,
-      }
-    })
-  );
+  // print!(
+  //   hc,
+  //   "/api/rpc",
+  //   json!({
+  //     "id": 1,
+  //     "method": "delete_task",
+  //     "params": {
+  //       "id": 1000,
+  //     }
+  //   })
+  // );
 
   print!(
     hc,
