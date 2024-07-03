@@ -68,6 +68,11 @@ async fn main() -> Result<()> {
     json!({
       "id": 1,
       "method": "list_tasks",
+      "params": {
+        "list_options": {
+          "order_by": "!id"
+        }
+      }
     })
   );
 

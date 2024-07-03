@@ -3,8 +3,11 @@ use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::Router;
 use axum::{response::Response, Json};
+use modql::filter::ListOptions;
+use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{from_value, json, to_value, Value};
+use serde_with::{serde_as, OneOrMany};
 use std::sync::Arc;
 use tracing::debug;
 
@@ -36,6 +39,17 @@ struct ParamsUpdateRequest<D> {
 #[derive(Deserialize)]
 struct ParamsIdedRequest {
   id: i64,
+}
+
+#[serde_as]
+#[derive(Deserialize)]
+struct ParamsListRequest<F>
+where
+  F: DeserializeOwned,
+{
+  #[serde_as(deserialize_as = "Option<OneOrMany<_>>")]
+  pub filters: Option<Vec<F>>,
+  pub list_options: Option<ListOptions>,
 }
 
 pub fn routes(mm: ModelManager) -> Router {
@@ -99,7 +113,7 @@ async fn _rpc_handler(ctx: Ctx, mm: ModelManager, rpc_req: RpcRequest) -> Result
   let result_json: Value = match rpc_method.as_str() {
     // -- Task RPC methods
     "create_task" => exec_rpc_fn!(create_task, ctx, mm, rpc_params),
-    "list_tasks" => exec_rpc_fn!(list_tasks, ctx, mm),
+    "list_tasks" => exec_rpc_fn!(list_tasks, ctx, mm, rpc_params),
     "update_task" => exec_rpc_fn!(update_task, ctx, mm, rpc_params),
     "delete_task" => exec_rpc_fn!(delete_task, ctx, mm, rpc_params),
 
